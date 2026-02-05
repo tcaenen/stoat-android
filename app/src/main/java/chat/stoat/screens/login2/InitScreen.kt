@@ -38,7 +38,6 @@ import chat.stoat.api.settings.LoadedSettings
 import chat.stoat.composables.generic.AnyLink
 import chat.stoat.composables.generic.Weblink
 import chat.stoat.ui.theme.Theme
-import com.chuckerteam.chucker.api.Chucker
 
 @Composable
 fun InitScreen(
@@ -166,16 +165,5 @@ private fun LinkPart(windowSizeClass: WindowSizeClass) {
             text = stringResource(R.string.community_guidelines),
             url = "$STOAT_MARKETING/aup"
         )
-
-        if (BuildConfig.DEBUG) {
-            AnyLink(
-                text = "Debug: Chucker",
-                action = {
-                    Chucker.getLaunchIntent(context).apply {
-                        context.startActivity(this)
-                    }
-                }
-            )
-        }
     }
 }

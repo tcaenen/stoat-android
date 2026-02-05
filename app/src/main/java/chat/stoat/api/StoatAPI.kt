@@ -21,9 +21,6 @@ import chat.stoat.core.model.schemas.ChannelType
 import chat.stoat.core.model.schemas.User
 import chat.stoat.persistence.Database
 import chat.stoat.persistence.SqlStorage
-import com.chuckerteam.chucker.api.ChuckerCollector
-import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.chuckerteam.chucker.api.RetentionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
@@ -56,19 +53,29 @@ import chat.stoat.core.model.schemas.Channel as ChannelSchema
 
 private const val USE_ALPHA_API = false
 
-val STOAT_BASE =
-    if (USE_ALPHA_API) "https://alpha.revolt.chat/api" else "https://api.stoat.chat/0.8"
-const val STOAT_SUPPORT = "https://support.stoat.chat"
+var STOAT_BASE =
+    if (USE_ALPHA_API) "https://api.stoat.chat" else "https://api.stoat.chat"
+const val STOAT_SUPPORT = "https://stoat.chat"
 const val STOAT_MARKETING = "https://stoat.chat"
-val STOAT_FILES =
-    if (USE_ALPHA_API) "https://alpha.revolt.chat/autumn" else "https://cdn.stoatusercontent.com"
-val STOAT_PROXY =
-    if (USE_ALPHA_API) "https://alpha.revolt.chat/january" else "https://proxy.stoatusercontent.com"
-const val STOAT_WEB_APP = "https://stoat.chat"
+var STOAT_FILES =
+    if (USE_ALPHA_API) "https://autumn.stoat.chat" else "https://autumn.stoat.chat"
+var STOAT_PROXY =
+    if (USE_ALPHA_API) "https://january.stoat.chat" else "https://january.stoat.chat"
+var STOAT_WEB_APP = "https://app.stoat.chat"
 const val STOAT_INVITES = "https://stt.gg"
-val STOAT_WEBSOCKET =
-    if (USE_ALPHA_API) "wss://alpha.revolt.chat/ws" else "wss://events.stoat.chat"
+var STOAT_WEBSOCKET =
+    if (USE_ALPHA_API) "wss://ws.stoat.chat" else "wss://ws.stoat.chat"
 const val STOAT_KJBOOK = "https://stoatchat.github.io/for-android"
+
+fun configureStoatUrls(baseUrl: String) {
+    if (baseUrl.isBlank()) return
+    val root = baseUrl.removeSuffix("/")
+    STOAT_BASE = "$root/api"
+    STOAT_FILES = "$root/autumn"
+    STOAT_PROXY = "$root/january"
+    STOAT_WEB_APP = root
+    STOAT_WEBSOCKET = root.replace("https://", "wss://").replace("http://", "ws://") + "/ws"
+}
 
 fun String.api(): String {
     return "$STOAT_BASE$this"
@@ -112,20 +119,6 @@ val StoatHttp = HttpClient(OkHttp) {
 
     install(Logging) { level = LogLevel.INFO }
 
-    val chuckerCollector = ChuckerCollector(
-        context = StoatApplication.instance,
-        showNotification = true,
-        retentionPeriod = RetentionManager.Period.ONE_DAY
-    )
-
-    val chuckerInterceptor = ChuckerInterceptor.Builder(StoatApplication.instance)
-        .collector(chuckerCollector)
-        .maxContentLength(250_000L)
-        .redactHeaders(StoatAPI.TOKEN_HEADER_NAME)
-        .alwaysReadResponseBody(true)
-        .createShortcut(false)
-        .build()
-
     engine {
         addInterceptor { chain ->
             val request = chain.request().newBuilder()
@@ -137,11 +130,10 @@ val StoatHttp = HttpClient(OkHttp) {
                 .build()
             chain.proceed(request)
         }
-        addInterceptor(chuckerInterceptor)
     }
 
     defaultRequest {
-        url(STOAT_BASE)
+        // url(STOAT_BASE) - Removed to allow dynamic base URL via .api() extension
         header("User-Agent", buildUserAgent())
     }
 }

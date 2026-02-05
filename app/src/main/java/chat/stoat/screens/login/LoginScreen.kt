@@ -86,6 +86,28 @@ class LoginViewModel @Inject constructor(
     val mfaResponse: EmailPasswordAssessment?
         get() = _mfaResponse
 
+    private var _instanceUrl by mutableStateOf("")
+    val instanceUrl: String
+        get() = _instanceUrl
+
+    init {
+        viewModelScope.launch {
+            val savedUrl = kvStorage.get("instance_url")
+            if (savedUrl != null) {
+                _instanceUrl = savedUrl
+                chat.stoat.api.configureStoatUrls(savedUrl)
+            }
+        }
+    }
+
+    fun setInstanceUrl(url: String) {
+        _instanceUrl = url
+        chat.stoat.api.configureStoatUrls(url)
+        viewModelScope.launch {
+            kvStorage.set("instance_url", url)
+        }
+    }
+
     fun doLogin() {
         _error = null
 
@@ -222,6 +244,14 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltVi
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                FormTextField(
+                    value = viewModel.instanceUrl,
+                    label = "Instance URL",
+                    type = KeyboardType.Uri,
+                    onChange = { viewModel.setInstanceUrl(it) }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
                 FormTextField(
                     value = viewModel.email,
                     label = stringResource(R.string.email),

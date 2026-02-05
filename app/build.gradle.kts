@@ -61,7 +61,7 @@ android {
     namespace = "chat.stoat"
 
     defaultConfig {
-        applicationId = "chat.revolt"
+        applicationId = "chat.stoat"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = Integer.parseInt("001_003_409".replace("_", ""), 10)
@@ -82,6 +82,8 @@ android {
 
     buildTypes {
         release {
+            // Sign with debug key to allow installation without release keys
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -267,9 +269,6 @@ dependencies {
     implementation(libs.firebase.messaging)
 
     implementation(libs.shimmer)
-
-    debugImplementation(libs.chucker)
-    releaseImplementation(libs.chucker.noop)
 
     implementation(libs.square.logcat)
 
