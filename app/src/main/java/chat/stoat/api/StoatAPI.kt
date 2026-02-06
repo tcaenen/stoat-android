@@ -69,7 +69,10 @@ const val STOAT_KJBOOK = "https://stoatchat.github.io/for-android"
 
 fun configureStoatUrls(baseUrl: String) {
     if (baseUrl.isBlank()) return
-    val root = baseUrl.removeSuffix("/")
+    var root = baseUrl.removeSuffix("/")
+    if (!root.startsWith("http://") && !root.startsWith("https://")) {
+        root = "https://$root"
+    }
     STOAT_BASE = "$root/api"
     STOAT_FILES = "$root/autumn"
     STOAT_PROXY = "$root/january"
